@@ -8,31 +8,14 @@ $links = [
         'active' => request() -> routeIs('admin.dashboard')
     ],
     [
-        'header' => 'Administración',
+        'header' => 'Gestion',
 
     ],
     [
-        'name' => 'Tienda en linea',
-        'icon' => 'fa-solid fa-user-group',
-        'href' => route('admin.dashboard'),
-        'active' => request() -> routeIs('admin.dashboard'),
-        'submenu' => [
-            [
-                'name' => 'Producto',
-                'href' => '#',
-                'active' => false,
-            ],
-            [
-                'name' => 'Categorias',
-                'href' => '#',
-                'active' => false,
-            ],
-            [
-                'name' => 'Pedidos',
-                'href' => '#',
-                'active' => false,
-            ]
-        ]
+        'name' => 'Roles y Permisos',
+        'icon' => 'fa-solid fa-shield-halved',
+        'href' => route('admin.roles.index'),
+        'active' => request() -> routeIs('admin.roles.*'),
     ],
 ];
 

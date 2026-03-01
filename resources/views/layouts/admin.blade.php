@@ -19,6 +19,8 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
         {{-- WireUI --}}
         <wireui:scripts />
         <!-- <script src="//unpkg.com/alpinejs" defer></script> -->
@@ -32,13 +34,25 @@
 
 
         <div class="p-4 sm:ml-64 mt-14">
-            <div class="mt-14">
+            <div class="mt-14 flex justify-between items-center w-full">
                 @include('layouts.includes.admin.breadcrum')
+                @isset($action)
+                    <div>
+                        {{ $action }}
+                    </div>
+                @endisset
             </div>
                 {{ $slot }}
         </div>
 
         @stack('modals')
+
+        {{-- Mostrar Sweet Alert --}}
+        @if(@session('swal'))
+            <script>
+                Swal.fire(@json(session('swal')));
+            </script>
+        @endif
 
         @livewireScripts
         <script src="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.js"></script>
