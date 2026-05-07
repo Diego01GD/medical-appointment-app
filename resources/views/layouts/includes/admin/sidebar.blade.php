@@ -29,6 +29,30 @@ $links = [
         'href' => route('admin.patients.index'),
         'active' => request()->routeIs('admin.patients.*'),
     ],
+    [
+        'name' => 'Doctores',
+        'icon' => 'fa-solid fa-user-doctor',
+        'href' => route('admin.doctors.index'),
+        'active' => request()->routeIs('admin.doctors.*') || request()->routeIs('admin.doctor-schedules'),
+    ],
+    [
+        'name' => 'Citas médicas',
+        'icon' => 'fa-solid fa-calendar-check',
+        'href' => route('admin.appointments.index'),
+        'active' => request()->routeIs('admin.appointments.*') || request()->routeIs('admin.consultations.*'),
+    ],
+    [
+        'name' => 'Calendario',
+        'icon' => 'fa-solid fa-calendar-days',
+        'href' => route('admin.calendar'),
+        'active' => request()->routeIs('admin.calendar'),
+    ],
+    [
+        'name' => 'Soporte',
+        'icon' => 'fa-solid fa-headset',
+        'href' => '#',
+        'active' => false,
+    ],
 ];
 
 @endphp
