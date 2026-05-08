@@ -146,7 +146,7 @@ class AppointmentCreate extends Component
             'selectedDoctorId.required' => 'Debe seleccionar un horario de la lista.',
         ]);
 
-        Appointment::create([
+        $appointment = Appointment::create([
             'patient_id' => $this->patient_id,
             'doctor_id' => $this->selectedDoctorId,
             'date' => $this->searchDate,
@@ -156,7 +156,54 @@ class AppointmentCreate extends Component
             'status' => 1, // Programada
         ]);
 
-        session()->flash('success', 'Cita agendada exitosamente.');
+        // Cargar relaciones necesarias para el correo y PDF
+        $appointment->load(['patient.user', 'doctor.user']);
+
+        try {
+            // Generar el PDF
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.appointment', compact('appointment'));
+            $pdfContent = $pdf->output();
+
+            // Obtener los correos
+            $patientEmail = $appointment->patient->user->email;
+            $doctorEmail = $appointment->doctor->user->email;
+
+            // Enviar correo
+            \Illuminate\Support\Facades\Mail::to($patientEmail)
+                ->cc($doctorEmail)
+                ->send(new \App\Mail\AppointmentCreatedMail($appointment, $pdfContent));
+            
+            // Enviar WhatsApp al paciente
+            $patientUser = $appointment->patient->user;
+            $doctorUser = $appointment->doctor->user;
+
+            if (!empty($patientUser->phone)) {
+                $cleanPhone = preg_replace('/[^0-9]/', '', $patientUser->phone);
+                if (strlen($cleanPhone) >= 10) {
+                    $cleanPhone = substr($cleanPhone, -10);
+                    $formattedPhone = '52' . $cleanPhone;
+
+                    $doctorNames = explode(' ', trim($doctorUser->name));
+                    $doctorLastName = count($doctorNames) > 1 ? end($doctorNames) : $doctorUser->name;
+                    $formattedDate = Carbon::parse($appointment->date)->format('d/m/Y');
+                    $formattedTime = Carbon::parse($appointment->start_time)->format('H:i');
+
+                    $message = "Hola {$patientUser->name}, Healthify te informa que tu cita con el Dr. {$doctorLastName} ha sido agendada para el día {$formattedDate} a las {$formattedTime}. ¡Te esperamos! Recuerda llegar 15 minutos antes.";
+
+                    \Illuminate\Support\Facades\Http::get('https://api.callmebot.com/whatsapp.php', [
+                        'phone' => $formattedPhone,
+                        'text' => $message,
+                        'apikey' => '2388890'
+                    ]);
+                }
+            }
+            
+            session()->flash('success', 'Cita agendada exitosamente, correo y WhatsApp enviados.');
+        } catch (\Exception $e) {
+            // Si falla el correo o whatsapp, la cita ya se guardó, solo notificamos
+            session()->flash('success', 'Cita agendada exitosamente, pero hubo un error enviando notificaciones: ' . $e->getMessage());
+        }
+
         return redirect()->route('admin.appointments.index');
     }
 
